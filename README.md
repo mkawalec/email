@@ -26,13 +26,14 @@ Back-end:
 - [ ] Devise an operation method for offline mode ('offline first')
 - [ ] Support email sending (in UTF-8, quoted-printable encoded only)
 - [ ] Support email encryption
-- [ ] Support draft sending
+- [ ] Support draft saving
+  - [ ] Straight to DB/server
+  - [ ] Encrypted
 - [ ] Add an address book
   - [ ] Automatically store emails of outgoing people
   - [ ] Add an address book API
 - [ ] Add search
 - [ ] GPG key management
-
 
 
 Front-end:
@@ -43,7 +44,10 @@ Front-end:
 - [ ] Support attachement saving
 - [ ] Show attached images
 - [ ] Email sending
+- [ ] Mailbox creation
 - [ ] Email movement into different mailboxes
 - [ ] Search results display
 - [ ] Email address autocomplete
 - [ ] GPG key management
+- [ ] Display a gravatar :)
+- [ ] Settings window
