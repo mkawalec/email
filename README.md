@@ -11,7 +11,7 @@ Back-end:
   - [ ] Parse special attributes (subject, dates etc, etc) into special
         type fields
   - [ ] Write docs and tests (include some degenerate cases too)
-  - [ ] Publish an email-parse library on Hackage (let Sandi guy know)
+  - [ ] Publish an email-parse library on Hackage
 - [ ] Download whole inboxes
 - [ ] Persist parsed email and attachements to disk
 - [ ] Be able to only download updates, in an efficient manner
