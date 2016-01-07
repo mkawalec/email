@@ -46,7 +46,12 @@ main = do
   login imapConn username password
 
   select imapConn "INBOX"
-  messageIds <- search imapConn [ALLs]-}
+  messageIds <- search imapConn [ALLs]
+  -}
+
+  --mails <- mapM (fetch imapConn) messageIds
+  --writeFile "data" (show mails)
+
 
   msgs <- readFile "data" >>= \x -> return (read x :: [BS.ByteString])
   messages <- mapM parseMessage msgs
@@ -55,7 +60,7 @@ main = do
   let allBodies = concat $ map emailBodies (rights messages)
   mapM_ printBody allBodies
 
-  putStrLn (show . length $ rights messages)
+  putStrLn (show  . length $ rights messages)
   putStrLn (show . length $ lefts messages)
   --mapM_ (putStrLn . show) (rights messages)
   putStrLn "done"

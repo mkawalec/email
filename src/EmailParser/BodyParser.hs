@@ -18,6 +18,8 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Encoding (encodingFromStringExplicit, decodeStrictByteString)
 import qualified Debug.Trace as DT
+import qualified Data.Text.ICU.Convert as ICU
+import System.IO.Unsafe (unsafePerformIO)
 
 import Types
 import EmailParser.Types
@@ -30,14 +32,11 @@ transferDecode body encoding = case T.toLower encoding of
   "base64" -> B64.decode body
   _ -> Right body
 
-toText :: BS.ByteString -> Text -> Either ErrorMessage Text
+toText :: BS.ByteString -> Text -> Text
 toText body encoding = case T.toLower encoding of
-  "utf-8" -> Right $ decodeUtf8 body
-  _ -> if isJust matchedEncoding
-        then Right $ T.pack $ decodeStrictByteString (fromJust matchedEncoding) body
-        else Right $ decodeUtf8 body
-    where lowerEncoding = T.unpack . (T.replace "-" "_") . T.toLower $ encoding
-          matchedEncoding = encodingFromStringExplicit lowerEncoding
+  "utf-8" -> decodeUtf8 body
+  _ -> ICU.toUnicode converter body
+    where converter = unsafePerformIO $ ICU.open (T.unpack encoding) (Just True)
 
 findHeader :: String -> [Header] -> Either ErrorMessage Header
 findHeader hdr headers = maybeToEither notFound header
@@ -48,15 +47,15 @@ parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
 parseTextBody headers body =
   if isRight contentType
     then if isRight decodedBody
-          then charset >>= toText (head . rights $ [decodedBody])
-          else charset >>= toText body
-    else toText body "utf-8"
+          then charset >>= return . toText (head . rights $ [decodedBody])
+          else charset >>= return . toText body
+    else Right $ toText body "utf-8"
   where decodedBody = findHeader "Content-Transfer-Encoding" headers >>=
           return . headerContents >>=
-          \h -> DT.traceShow h $ mapLeft (\e -> DT.traceShow e $ "Decoding error") (transferDecode body h)
+          \h -> mapLeft (\_ -> "Decoding error") (transferDecode body h)
         noMIME = "No mimetype declaration could be found"
         noCharset = "No charset could be found"
-        contentType = DT.traceShow decodedBody $ findHeader "Content-Type" headers
+        contentType = findHeader "Content-Type" headers
         charset = contentType >>=
           \h -> maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
           \m -> maybeToEither noCharset $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=

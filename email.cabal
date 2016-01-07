@@ -36,7 +36,8 @@ executable email
                        MissingH == 1.3.0.1,
                        encoding == 0.8,
                        either == 4.4.1,
-                       load-env == 0.1.1
+                       load-env == 0.1.1,
+                       text-icu == 0.7.0.1
   hs-source-dirs:      src
   c-sources:           csrc/codec.c
   include-dirs:        csrc
