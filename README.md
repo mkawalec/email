@@ -5,7 +5,8 @@ with a name yet to be invented
 
 Back-end:
 - [ ] Email parsing
-  - [ ] Parse url-encoded emails properly into unicode Texts
+  - [x] Parse url-encoded emails properly into unicode Texts
+  - [ ] Boundary parsing is most probably comically broken (perf too)
   - [ ] Parse base64-encoded too
   - [ ] Parse attachements into separate places
   - [ ] Parse special attributes (subject, dates etc, etc) into special
