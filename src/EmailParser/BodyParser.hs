@@ -29,7 +29,7 @@ import EmailParser.Decoders (qp_dec)
 transferDecode :: BS.ByteString -> Text -> Either (BS.ByteString, BS.ByteString) BS.ByteString
 transferDecode body encoding = case T.toLower encoding of
   "quoted-printable" -> qp_dec body
-  "base64" -> B64.decode body
+  "base64" -> DT.trace "decoding b64" $ B64.decode body
   _ -> Right body
 
 toText :: BS.ByteString -> Text -> Text

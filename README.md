@@ -7,7 +7,7 @@ Back-end:
 - [ ] Email parsing
   - [x] Parse url-encoded emails properly into unicode Texts
   - [ ] Boundary parsing is most probably comically broken (perf too)
-  - [ ] Parse base64-encoded too
+  - [x] Parse base64-encoded too
   - [ ] Parse attachements into separate places
   - [ ] Parse special attributes (subject, dates etc, etc) into special
         type fields
