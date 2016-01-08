@@ -17,6 +17,7 @@ import qualified Data.ByteString.Char8 as BS
 import Types
 import EmailParser.Types
 import EmailParser (parseMessage)
+import System.TimeIt
 
 connSettings = defaultSettingsIMAPSSL {
   sslPort = 993
@@ -55,7 +56,7 @@ main = do
 
 
   msgs <- readFile "data" >>= \x -> return (read x :: [BS.ByteString])
-  messages <- mapM parseMessage msgs
+  messages <- timeIt $ mapM parseMessage msgs
 
   --messages <- mapM (parseMessage . fetch imapConn) messageIds
   let allBodies = concat $ map emailBodies (rights messages)
@@ -63,5 +64,5 @@ main = do
 
   putStrLn (show  . length $ rights messages)
   putStrLn (show . length $ lefts messages)
-  --mapM_ (putStrLn . show) (rights messages)
+  --mapM_ (putStrLn . show) (messages)
   putStrLn "done"

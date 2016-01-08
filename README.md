@@ -7,12 +7,10 @@ Back-end:
 - [ ] Email parsing
   - [x] Parse url-encoded emails properly into unicode Texts
   - [x] Boundary parsing is most probably comically broken (perf too)
-  - [ ] Improve header parsing perf
+  - [x] Improve header parsing perf
   - [ ] Parse MIME
   - [x] Parse base64-encoded too
   - [ ] Parse attachements into separate places
-  - [ ] Parse special attributes (subject, dates etc, etc) into special
-        type fields
   - [ ] Write docs and tests (include some degenerate cases too)
   - [ ] Publish an email-parse library on Hackage
 - [ ] Download whole inboxes

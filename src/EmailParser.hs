@@ -7,6 +7,7 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString as B
+import Debug.Trace as DT
 
 import Data.List (find)
 import Data.Maybe
@@ -18,6 +19,9 @@ import EmailParser.MIME (isValidMIME, parseMIME)
 import EmailParser.BodyParser (parseTextBody)
 import EmailParser.MIME.Multipart
 
+cleanupLines :: [BS.ByteString] -> BS.ByteString
+cleanupLines ls = BS.intercalate " " $ map BS.init ls
+
 headerParser :: Parser Header
 headerParser = do
   headerName <- AP.takeWhile (/= _colon)
@@ -26,8 +30,8 @@ headerParser = do
 
   headerLine <- consumeTillEndLine
   moreLines <- many' isConsequentHeaderLine
-  let headerBody = headerLine ++ concat moreLines
-  return $ Header (BS.unpack headerName) (decodeUtf8 . B.pack $ headerBody)
+  let headerBody = cleanupLines $ [headerLine] ++ moreLines
+  return $ Header (BS.unpack headerName) (decodeUtf8 headerBody)
 
 messageParser :: Parser (Either ErrorMessage EmailMessage)
 messageParser = do
