@@ -16,7 +16,6 @@ import Data.List (find)
 import Data.Text (Text, splitOn)
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
-import Data.Encoding (encodingFromStringExplicit, decodeStrictByteString)
 import qualified Debug.Trace as DT
 import qualified Data.Text.ICU.Convert as ICU
 import System.IO.Unsafe (unsafePerformIO)
@@ -29,7 +28,7 @@ import EmailParser.Decoders (qp_dec)
 transferDecode :: BS.ByteString -> Text -> Either (BS.ByteString, BS.ByteString) BS.ByteString
 transferDecode body encoding = case T.toLower encoding of
   "quoted-printable" -> qp_dec body
-  "base64" -> DT.trace "decoding b64" $ B64.decode body
+  "base64" -> B64.decode body
   _ -> Right body
 
 toText :: BS.ByteString -> Text -> Text

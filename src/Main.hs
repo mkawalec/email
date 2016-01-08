@@ -31,6 +31,7 @@ notifier updateChannel = do
 printBody :: EmailBody -> IO ()
 printBody body = case body of
   TextBody text -> putStrLn $ show text
+  MIMEBody headers body -> putStrLn $ show body
   _ -> putStrLn "not text"
 
 main :: IO ()
@@ -58,7 +59,7 @@ main = do
 
   --messages <- mapM (parseMessage . fetch imapConn) messageIds
   let allBodies = concat $ map emailBodies (rights messages)
-  --mapM_ printBody allBodies
+  mapM_ printBody (take 10 allBodies)
 
   putStrLn (show  . length $ rights messages)
   putStrLn (show . length $ lefts messages)
