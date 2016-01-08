@@ -18,20 +18,7 @@ import EmailParser.Utils
 import EmailParser.MIME (isValidMIME, parseMIME)
 import EmailParser.BodyParser (parseTextBody)
 import EmailParser.MIME.Multipart
-
-cleanupLines :: [BS.ByteString] -> BS.ByteString
-cleanupLines ls = BS.intercalate " " $ map BS.init ls
-
-headerParser :: Parser Header
-headerParser = do
-  headerName <- AP.takeWhile (/= _colon)
-  word8 _colon
-  AP.takeWhile isWhitespace
-
-  headerLine <- consumeTillEndLine
-  moreLines <- many' isConsequentHeaderLine
-  let headerBody = cleanupLines $ [headerLine] ++ moreLines
-  return $ Header (BS.unpack headerName) (decodeUtf8 headerBody)
+import EmailParser.HeaderParser (headerParser)
 
 messageParser :: Parser (Either ErrorMessage EmailMessage)
 messageParser = do

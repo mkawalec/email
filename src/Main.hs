@@ -60,9 +60,9 @@ main = do
 
   --messages <- mapM (parseMessage . fetch imapConn) messageIds
   let allBodies = concat $ map emailBodies (rights messages)
-  mapM_ printBody (take 10 allBodies)
+  --mapM_ printBody (take 10 allBodies)
 
   putStrLn (show  . length $ rights messages)
   putStrLn (show . length $ lefts messages)
-  --mapM_ (putStrLn . show) (messages)
+  mapM_ (putStrLn . show) (messages)
   putStrLn "done"
