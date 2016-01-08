@@ -10,7 +10,8 @@ Back-end:
   - [x] Improve header parsing perf
   - [x] Parse MIME
   - [x] Parse base64-encoded too
-  - [ ] Use global content type or encoding if local not available
+  - [ ] Also work without content type (utf8 be default)
+  - [x] Use global content type or encoding if local not available
   - [ ] Parse attachements into separate places
   - [ ] Write docs and tests (include some degenerate cases too)
   - [ ] Publish an email-parse library on Hackage

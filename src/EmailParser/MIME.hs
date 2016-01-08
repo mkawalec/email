@@ -31,26 +31,26 @@ isValidMIME header = isNameValid && isVersionValid
 
 defaultMIMEBody = MIMEBody [] ""
 
-mimeParser :: Parser (Either ErrorMessage EmailBody)
-mimeParser = do
+mimeParser :: [Header] -> Parser (Either ErrorMessage EmailBody)
+mimeParser bodyHeaders = do
   headers <- manyTill' headerParser $ string "\r\n"
   body <- takeByteString
 
-  return (parseTextBody headers body >>= return . MIMEBody headers)
+  return (parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers)
 
 isBroken :: [EmailBody] -> Either ErrorMessage EmailBody -> Either ErrorMessage [EmailBody]
 isBroken bodies current = case current of
   Right val -> Right (val:bodies)
   Left err -> Left err
 
-multipartParser :: [BS.ByteString] -> Either ErrorMessage [EmailBody]
-multipartParser parts = do
-  let parsed = map (\x -> parseOnly mimeParser x >>= id) parts
+multipartParser :: [Header] -> [BS.ByteString] -> Either ErrorMessage [EmailBody]
+multipartParser bodyHeaders parts = do
+  let parsed = map (\x -> parseOnly (mimeParser bodyHeaders) x >>= id) parts
   foldM isBroken [] parsed
 
 parseMIME :: [Header] -> BS.ByteString -> Either ErrorMessage [EmailBody]
 parseMIME headers body = case mimeType . fromJust $ msgType of
-    Multipart _ -> multiParsed >>= multipartParser
+    Multipart _ -> multiParsed >>= multipartParser headers
     Text _ -> parseTextBody headers body >>= \x -> return [TextBody x]
     _ -> Left "mimetype not supported"
   where typeHeader  = find (\h -> headerName h == "Content-Type") headers
