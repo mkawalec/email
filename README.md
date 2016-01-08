@@ -8,8 +8,9 @@ Back-end:
   - [x] Parse url-encoded emails properly into unicode Texts
   - [x] Boundary parsing is most probably comically broken (perf too)
   - [x] Improve header parsing perf
-  - [ ] Parse MIME
+  - [x] Parse MIME
   - [x] Parse base64-encoded too
+  - [ ] Use global content type or encoding if local not available
   - [ ] Parse attachements into separate places
   - [ ] Write docs and tests (include some degenerate cases too)
   - [ ] Publish an email-parse library on Hackage
