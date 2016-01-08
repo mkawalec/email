@@ -13,8 +13,7 @@ Back-end:
   - [x] Also work without content type (utf8 be default)
   - [x] Use global content type or encoding if local not available
   - [x] Parse attachements into separate places
-  - [ ] Write docs and tests (include some degenerate cases too)
-  - [ ] Publish an email-parse library on Hackage
+  - [ ] Write docs
 - [ ] Download whole inboxes
 - [ ] Persist parsed email and attachements to disk
 - [ ] Be able to only download updates, in an efficient manner
@@ -27,6 +26,7 @@ Back-end:
   - [ ] Push updates into the API while downloading/updating mailboxes
 - [ ] Support email decryption
 - [ ] Devise an operation method for offline mode ('offline first')
+- [ ] Publish an email-parse library on Hackage
 - [ ] Support email sending (in UTF-8, quoted-printable encoded only)
 - [ ] Support email encryption
 - [ ] Support draft saving
