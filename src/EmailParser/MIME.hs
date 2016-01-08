@@ -7,7 +7,7 @@ import EmailParser.HeaderParser (headerParser)
 import Data.Either.Utils (maybeToEither)
 import Data.Attoparsec.ByteString
 import Data.List (find)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isJust)
 import qualified Data.Text as T
 
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
@@ -49,10 +49,12 @@ multipartParser bodyHeaders parts = do
   foldM isBroken [] parsed
 
 parseMIME :: [Header] -> BS.ByteString -> Either ErrorMessage [EmailBody]
-parseMIME headers body = case mimeType . fromJust $ msgType of
+parseMIME headers body = case isJust msgType of
+  True -> case mimeType . fromJust $ msgType of
     Multipart _ -> multiParsed >>= multipartParser headers
     Text _ -> parseTextBody headers body >>= \x -> return [TextBody x]
     _ -> Left "mimetype not supported"
+  False -> parseTextBody headers body >>= \x -> return [TextBody x]
   where typeHeader  = find (\h -> headerName h == "Content-Type") headers
         msgType     = typeHeader >>= parseMIMEType . headerContents
         boundaryP   = find (\p -> paramName p == "boundary") $ mimeParams . fromJust $ msgType

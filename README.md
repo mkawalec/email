@@ -10,7 +10,7 @@ Back-end:
   - [x] Improve header parsing perf
   - [x] Parse MIME
   - [x] Parse base64-encoded too
-  - [ ] Also work without content type (utf8 be default)
+  - [x] Also work without content type (utf8 be default)
   - [x] Use global content type or encoding if local not available
   - [ ] Parse attachements into separate places
   - [ ] Write docs and tests (include some degenerate cases too)
