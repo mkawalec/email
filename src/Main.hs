@@ -63,6 +63,6 @@ main = do
   --mapM_ printBody (take 10 allBodies)
 
   putStrLn (show  . length $ rights messages)
-  putStrLn (show . length $ lefts messages)
-  mapM_ (putStrLn . show) (messages)
+  putStrLn (show . lefts $ messages)
+  --mapM_ (putStrLn . show) (messages)
   putStrLn "done"

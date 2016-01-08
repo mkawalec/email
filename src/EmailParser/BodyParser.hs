@@ -8,7 +8,7 @@ import Codec.MIME.Type
 
 import Data.Either.Combinators (mapLeft)
 import Data.Either.Utils (maybeToEither)
-import Data.Either (isRight, rights, lefts)
+import Data.Either (isRight, isLeft, rights, lefts)
 import Data.Maybe (fromJust, isJust)
 
 import Data.List (find)
@@ -44,7 +44,7 @@ findHeader hdr headers = maybeToEither notFound header
 
 parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
 parseTextBody headers body =
-  if isRight contentType
+  if isRight charset
     then if isRight decodedBody
           then charset >>= return . toText (head . rights $ [decodedBody])
           else charset >>= return . toText body
@@ -54,8 +54,7 @@ parseTextBody headers body =
           \h -> mapLeft (\_ -> "Decoding error") (transferDecode body h)
         noMIME = "No mimetype declaration could be found"
         noCharset = "No charset could be found"
-        contentType = findHeader "Content-Type" headers
-        charset = contentType >>=
-          \h -> maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
+        charset = findHeader "Content-Type" headers >>=
+          \h -> DT.traceShow h $ maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
           \m -> maybeToEither noCharset $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=
           return . paramValue

@@ -36,7 +36,7 @@ mimeParser bodyHeaders = do
   headers <- manyTill' headerParser $ string "\r\n"
   body <- takeByteString
 
-  return (parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers)
+  return $ DT.traceShow headers $ (parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers)
 
 isBroken :: [EmailBody] -> Either ErrorMessage EmailBody -> Either ErrorMessage [EmailBody]
 isBroken bodies current = case current of
