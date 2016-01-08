@@ -13,7 +13,7 @@ data Header = Header {
   headerContents :: Text
 } deriving (Show)
 
-data EmailBody = MIMEBody { mimeHeaders :: [Header], mimeBody :: Text} |
-                 TextBody Text |
-                 Attachment {attachementName :: Text, attachementBody :: BS.ByteString}
+data EmailBody = MIMEBody { mimeHeaders :: ![Header], mimeBody :: !Text} |
+                 TextBody !Text |
+                 Attachment {attachementName :: !Text, attachementBody :: !BS.ByteString}
                  deriving (Show)

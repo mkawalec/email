@@ -12,7 +12,7 @@ Back-end:
   - [x] Parse base64-encoded too
   - [x] Also work without content type (utf8 be default)
   - [x] Use global content type or encoding if local not available
-  - [ ] Parse attachements into separate places
+  - [x] Parse attachements into separate places
   - [ ] Write docs and tests (include some degenerate cases too)
   - [ ] Publish an email-parse library on Hackage
 - [ ] Download whole inboxes

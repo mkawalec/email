@@ -4,6 +4,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import EmailParser.MIME.Multipart (parseMultipart)
 import EmailParser.HeaderParser (headerParser)
+import EmailParser.BodyParser (decodeBody)
 import Data.Either.Utils (maybeToEither)
 import Data.Attoparsec.ByteString
 import Data.List (find)
@@ -36,7 +37,7 @@ findAttachementName header =
   if (T.toLower . T.strip $ split !! 0) == "attachment"
     then if length split == 0
       then Just ""
-      else filenameParam >>= \x -> DT.traceShow x $ return . T.strip $ T.dropAround (== '\"') (x !! 1)
+      else filenameParam >>= return . T.strip . T.dropAround (== '"') . (!! 1)
     else Nothing
   where split = T.splitOn ";" header
         paramSplit = map (T.splitOn "=") (tail split)
@@ -49,11 +50,14 @@ discoverAttachement headers = hdr >>= findAttachementName . headerContents
 mimeParser :: [Header] -> Parser (Either ErrorMessage EmailBody)
 mimeParser bodyHeaders = do
   headers <- manyTill' headerParser $ string "\r\n"
-  body <- DT.traceShow headers $ takeByteString
+  body <- takeByteString
 
   if isJust $ discoverAttachement headers
-    then return $ Right $ Attachment (fromJust $ discoverAttachement headers) body
-    else return $ parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers
+    then do
+      let filename = fromJust $ discoverAttachement headers
+      let decodedBody = decodeBody headers body
+      return . Right $ Attachment filename decodedBody
+    else return $! parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers
 
 isBroken :: [EmailBody] -> Either ErrorMessage EmailBody -> Either ErrorMessage [EmailBody]
 isBroken bodies current = case current of

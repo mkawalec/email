@@ -13,11 +13,13 @@ import Data.Either (isRight, rights, lefts)
 import LoadEnv (loadEnv)
 import System.Environment (getEnv)
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as B
 
 import Types
 import EmailParser.Types
 import EmailParser (parseMessage)
 import System.TimeIt
+import qualified Data.Text as T
 
 connSettings = defaultSettingsIMAPSSL {
   sslPort = 993
@@ -33,7 +35,9 @@ printBody :: EmailBody -> IO ()
 printBody body = case body of
   TextBody text -> putStrLn "text"
   MIMEBody headers body -> putStrLn "MIME"
-  Attachment name body -> putStrLn ("got a " ++ show name)
+  Attachment name body -> do
+    B.writeFile (T.unpack name) body
+    putStrLn $ "written " ++ (show name)
   _ -> putStrLn "not text"
 
 main :: IO ()

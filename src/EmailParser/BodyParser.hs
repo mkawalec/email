@@ -22,13 +22,13 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import Types
 import EmailParser.Types
-import EmailParser.Decoders (qp_dec)
+import EmailParser.Decoders (qp_dec, decode_b64)
 
 
 transferDecode :: BS.ByteString -> Text -> Either (BS.ByteString, BS.ByteString) BS.ByteString
 transferDecode body encoding = case T.toLower encoding of
   "quoted-printable" -> qp_dec body
-  "base64" -> B64.decode body
+  "base64" -> decode_b64 body
   _ -> Right body
 
 toText :: BS.ByteString -> Text -> Text
@@ -42,18 +42,21 @@ findHeader hdr headers = maybeToEither notFound header
   where notFound = "Cound not find header '" ++ hdr ++ "'"
         header   = find (\x -> (headerName x) == hdr) headers
 
-parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
-parseTextBody headers body =
-  if isRight charset
-    then if isRight decodedBody
-          then charset >>= return . toText (head . rights $ [decodedBody])
-          else charset >>= return . toText body
-    else if isRight decodedBody
-          then decodedBody >>= return . decodeUtf8
-          else Right $ toText body "utf-8"
+decodeBody :: [Header] -> BS.ByteString -> BS.ByteString
+decodeBody headers body =
+  if isRight decodedBody
+    then head . rights $ [decodedBody]
+    else body
   where decodedBody = findHeader "Content-Transfer-Encoding" headers >>=
           return . headerContents >>=
           \h -> mapLeft (\_ -> "Decoding error") (transferDecode body h)
+
+parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
+parseTextBody headers body =
+  if isRight charset
+    then charset >>= return . toText decodedBody
+    else Right $ decodeUtf8 decodedBody
+  where decodedBody = decodeBody headers body
         noMIME = "No mimetype declaration could be found"
         noCharset = "No charset could be found"
         charset = findHeader "Content-Type" headers >>=
