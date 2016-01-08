@@ -15,5 +15,5 @@ data Header = Header {
 
 data EmailBody = MIMEBody { mimeHeaders :: [Header], mimeBody :: Text} |
                  TextBody Text |
-                 Attachement BS.ByteString
+                 Attachment {attachementName :: Text, attachementBody :: BS.ByteString}
                  deriving (Show)

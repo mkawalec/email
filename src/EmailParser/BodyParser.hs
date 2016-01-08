@@ -48,13 +48,15 @@ parseTextBody headers body =
     then if isRight decodedBody
           then charset >>= return . toText (head . rights $ [decodedBody])
           else charset >>= return . toText body
-    else Right $ toText body "utf-8"
+    else if isRight decodedBody
+          then decodedBody >>= return . decodeUtf8
+          else Right $ toText body "utf-8"
   where decodedBody = findHeader "Content-Transfer-Encoding" headers >>=
           return . headerContents >>=
           \h -> mapLeft (\_ -> "Decoding error") (transferDecode body h)
         noMIME = "No mimetype declaration could be found"
         noCharset = "No charset could be found"
         charset = findHeader "Content-Type" headers >>=
-          \h -> DT.traceShow h $ maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
+          \h -> maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
           \m -> maybeToEither noCharset $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=
           return . paramValue

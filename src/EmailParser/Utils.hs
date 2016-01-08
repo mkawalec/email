@@ -12,7 +12,7 @@ import qualified Data.Text as T
 hadCRLF :: Word8 -> Word8 -> Maybe Word8
 hadCRLF prev current =
   if current == _lf
-    then if prev == _cr then DT.trace "breaking" $ Nothing else Just current
+    then if prev == _cr then Nothing else Just current
     else Just current
 
 consumeTillEndLine :: Parser BS.ByteString

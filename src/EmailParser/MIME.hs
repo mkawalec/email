@@ -31,12 +31,29 @@ isValidMIME header = isNameValid && isVersionValid
 
 defaultMIMEBody = MIMEBody [] ""
 
+findAttachementName :: T.Text -> Maybe T.Text
+findAttachementName header =
+  if (T.toLower . T.strip $ split !! 0) == "attachment"
+    then if length split == 0
+      then Just ""
+      else filenameParam >>= \x -> DT.traceShow x $ return . T.strip $ T.dropAround (== '\"') (x !! 1)
+    else Nothing
+  where split = T.splitOn ";" header
+        paramSplit = map (T.splitOn "=") (tail split)
+        filenameParam = find (\x -> T.strip (x !! 0) == "filename") paramSplit
+
+discoverAttachement :: [Header] -> Maybe T.Text
+discoverAttachement headers = hdr >>= findAttachementName . headerContents
+  where hdr = find (\x -> (T.toLower . T.pack . headerName $ x) == "content-disposition") headers
+
 mimeParser :: [Header] -> Parser (Either ErrorMessage EmailBody)
 mimeParser bodyHeaders = do
   headers <- manyTill' headerParser $ string "\r\n"
-  body <- takeByteString
+  body <- DT.traceShow headers $ takeByteString
 
-  return $ DT.traceShow headers $ (parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers)
+  if isJust $ discoverAttachement headers
+    then return $ Right $ Attachment (fromJust $ discoverAttachement headers) body
+    else return $ parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers
 
 isBroken :: [EmailBody] -> Either ErrorMessage EmailBody -> Either ErrorMessage [EmailBody]
 isBroken bodies current = case current of

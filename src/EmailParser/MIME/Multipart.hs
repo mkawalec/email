@@ -28,5 +28,4 @@ parseMultipart boundary =
     (manyTill' anyWord8 $ string completeBoundary) <* consumeTillEndLine
     payloads <- many' (scan 0 (isBoundaryMatched completeBoundary) <* consumeTillEndLine)
     return $ map (trimPayload completeBoundary) payloads
-  where completeBoundary = BS.append "\r\n--" boundary
-        endBoundary      = BS.append completeBoundary "--\r\n"
+  where completeBoundary = BS.append "--" boundary

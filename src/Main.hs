@@ -31,8 +31,9 @@ notifier updateChannel = do
 
 printBody :: EmailBody -> IO ()
 printBody body = case body of
-  TextBody text -> putStrLn $ show text
-  MIMEBody headers body -> putStrLn $ show body
+  --TextBody text -> putStrLn $ show text
+  --MIMEBody headers body -> putStrLn $ show body
+  Attachment name body -> putStrLn ("got a " ++ show name)
   _ -> putStrLn "not text"
 
 main :: IO ()
@@ -49,20 +50,21 @@ main = do
 
   select imapConn "INBOX"
   messageIds <- search imapConn [ALLs]
-  -}
 
-  --mails <- mapM (fetch imapConn) messageIds
-  --writeFile "data" (show mails)
 
+  mails <- mapM (fetch imapConn) messageIds
+  writeFile "data" (show mails)-}
 
   msgs <- readFile "data" >>= \x -> return (read x :: [BS.ByteString])
   messages <- timeIt $ mapM parseMessage msgs
 
   --messages <- mapM (parseMessage . fetch imapConn) messageIds
   let allBodies = concat $ map emailBodies (rights messages)
-  --mapM_ printBody (take 10 allBodies)
+  mapM_ printBody (take 10 allBodies)
 
   putStrLn (show  . length $ rights messages)
-  putStrLn (show . lefts $ messages)
-  --mapM_ (putStrLn . show) (messages)
+  putStrLn (show . length . lefts $ messages)
+  --mapM_ (putStrLn . show . length . emailBodies) (rights messages)
+  --mapM_ (putStrLn . show) (take 1 messages
+
   putStrLn "done"
