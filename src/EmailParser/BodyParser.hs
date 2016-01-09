@@ -25,23 +25,22 @@ import EmailParser.Types
 import EmailParser.Decoders (qp_dec, decode_b64)
 
 
+-- |Remove transfer encoding from a string of bytes
 transferDecode :: BS.ByteString -> Text -> Either (BS.ByteString, BS.ByteString) BS.ByteString
 transferDecode body encoding = case T.toLower encoding of
   "quoted-printable" -> qp_dec body
   "base64" -> decode_b64 body
   _ -> Right body
 
+-- |Transform a string of bytes with a given encoding
+-- into a UTF-8 string of bytes
 toText :: BS.ByteString -> Text -> Text
 toText body encoding = case T.toLower encoding of
   "utf-8" -> decodeUtf8 body
   _ -> ICU.toUnicode converter body
     where converter = unsafePerformIO $ ICU.open (T.unpack encoding) (Just True)
 
-findHeader :: String -> [Header] -> Either ErrorMessage Header
-findHeader hdr headers = maybeToEither notFound header
-  where notFound = "Cound not find header '" ++ hdr ++ "'"
-        header   = find (\x -> (headerName x) == hdr) headers
-
+-- |Reverse content transfer encoding applied to the body.
 decodeBody :: [Header] -> BS.ByteString -> BS.ByteString
 decodeBody headers body =
   if isRight decodedBody
@@ -51,15 +50,26 @@ decodeBody headers body =
           return . headerContents >>=
           \h -> mapLeft (\_ -> "Decoding error") (transferDecode body h)
 
+-- |Given a set of headers it tries to figure out
+-- the transfer encoding and charset and normalizes
+-- the contents into an UTF-8 encoded Text.
+--
+-- It will recover from errors, wherever possible
 parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
 parseTextBody headers body =
   if isRight charset
     then charset >>= return . toText decodedBody
     else Right $ decodeUtf8 decodedBody
   where decodedBody = decodeBody headers body
-        noMIME = "No mimetype declaration could be found"
-        noCharset = "No charset could be found"
         charset = findHeader "Content-Type" headers >>=
-          \h -> maybeToEither noMIME (parseMIMEType $ headerContents h) >>=
-          \m -> maybeToEither noCharset $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=
+          \h -> maybeToEither "" (parseMIMEType $ headerContents h) >>=
+          \m -> maybeToEither "" $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=
           return . paramValue
+
+-- |Given a header name, it will try to locate it in
+-- a list of headers, fail if it's not there
+findHeader :: Text -> [Header] -> Either ErrorMessage Header
+findHeader hdr headers = maybeToEither notFound header
+  where notFound    = "Cound not find header '" ++ (show hdr) ++ "'"
+        eigenHeader = T.toLower hdr
+        header      = find (\x -> (T.toLower $ headerName x) == eigenHeader) headers

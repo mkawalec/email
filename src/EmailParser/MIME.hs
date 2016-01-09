@@ -45,7 +45,7 @@ findAttachementName header =
 
 discoverAttachement :: [Header] -> Maybe T.Text
 discoverAttachement headers = hdr >>= findAttachementName . headerContents
-  where hdr = find (\x -> (T.toLower . T.pack . headerName $ x) == "content-disposition") headers
+  where hdr = find (\x -> (T.toLower . headerName $ x) == "content-disposition") headers
 
 mimeParser :: [Header] -> Parser (Either ErrorMessage EmailBody)
 mimeParser bodyHeaders = do
