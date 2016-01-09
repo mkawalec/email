@@ -10,9 +10,13 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import EmailParser.Types
 import EmailParser.Utils
 
+-- |Concatenate lines insterting whitespace between them.
+-- The whitespace needs to be inserted as these lines
+-- come from parser that eats up the whitespace
 cleanupLines :: [BSC.ByteString] -> BSC.ByteString
 cleanupLines ls = BSC.intercalate " " $ map BSC.init ls
 
+-- |Parses a header
 headerParser :: Parser Header
 headerParser = do
   headerName <- AP.takeWhile (/= _colon)

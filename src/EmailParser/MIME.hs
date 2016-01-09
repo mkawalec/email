@@ -24,16 +24,18 @@ import Types
 import qualified Debug.Trace as DT
 import Control.Monad (foldM)
 
+-- |Decide if the header contains a valid MIME info
 isValidMIME :: Header -> Bool
 isValidMIME header = isNameValid && isVersionValid
   where isNameValid    = headerName header == "MIME-Version"
         version        = commentRemover $ headerContents header
         isVersionValid = version == "1.0"
 
-defaultMIMEBody = MIMEBody [] ""
-
-findAttachementName :: T.Text -> Maybe T.Text
-findAttachementName header =
+-- |When provided with a content-disposition header,
+-- checks if it represents an attachment. If it does it returns
+-- it's name, otherwise Nothing
+findAttachmentName :: T.Text -> Maybe T.Text
+findAttachmentName header =
   if (T.toLower . T.strip $ split !! 0) == "attachment"
     then if length split == 0
       then Just ""
@@ -43,32 +45,41 @@ findAttachementName header =
         paramSplit = map (T.splitOn "=") (tail split)
         filenameParam = find (\x -> T.strip (x !! 0) == "filename") paramSplit
 
-discoverAttachement :: [Header] -> Maybe T.Text
-discoverAttachement headers = hdr >>= findAttachementName . headerContents
+-- |Check if the given headers represent an attachment
+discoverAttachment :: [Header] -> Maybe T.Text
+discoverAttachment headers = hdr >>= findAttachmentName . headerContents
   where hdr = find (\x -> (T.toLower . headerName $ x) == "content-disposition") headers
 
+-- |Parses a MIME message part. Needs headers from the actual message
+-- in case the MIME block misses some encoding blocks
 mimeParser :: [Header] -> Parser (Either ErrorMessage EmailBody)
 mimeParser bodyHeaders = do
   headers <- manyTill' headerParser $ string "\r\n"
   body <- takeByteString
 
-  if isJust $ discoverAttachement headers
+  let isAttachment = discoverAttachment headers
+  if isJust isAttachment
     then do
-      let filename = fromJust $ discoverAttachement headers
+      let filename = fromJust isAttachment
       let decodedBody = decodeBody headers body
       return . Right $ Attachment filename decodedBody
     else return $! parseTextBody (headers ++ bodyHeaders) body >>= return . MIMEBody headers
 
+-- |Add the current body to the list if it succeeds, if
+-- it doesn't return the error. Looks like it could be
+-- handled by an instance of some typeclass
 isBroken :: [EmailBody] -> Either ErrorMessage EmailBody -> Either ErrorMessage [EmailBody]
 isBroken bodies current = case current of
   Right val -> Right (val:bodies)
   Left err -> Left err
 
+-- |Parse a set of parts. Only returns results if the parse of all of them succeded
 multipartParser :: [Header] -> [BS.ByteString] -> Either ErrorMessage [EmailBody]
 multipartParser bodyHeaders parts = do
   let parsed = map (\x -> parseOnly (mimeParser bodyHeaders) x >>= id) parts
   foldM isBroken [] parsed
 
+-- |Parse a mime encoded body.
 parseMIME :: [Header] -> BS.ByteString -> Either ErrorMessage [EmailBody]
 parseMIME headers body = case isJust msgType of
   True -> case mimeType . fromJust $ msgType of

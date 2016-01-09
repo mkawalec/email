@@ -60,12 +60,14 @@ main = do
   writeFile "data" (show mails)-}
 
   msgs <- readFile "data" >>= \x -> return (read x :: [BS.ByteString])
+  seq msgs (return ())
   messages <- timeIt $ mapM parseMessage msgs
 
   --messages <- mapM (parseMessage . fetch imapConn) messageIds
   let allBodies = concat $ map emailBodies (rights messages)
   mapM_ printBody (allBodies)
 
+  writeFile "/dev/null" (show messages)
   putStrLn (show  . length $ rights messages)
   putStrLn (show . length . lefts $ messages)
   --mapM_ (putStrLn . show . length . emailBodies) (rights messages)

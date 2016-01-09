@@ -1,5 +1,9 @@
 module EmailParser.Decoders (qp_dec, decode_b64) where
 
+-- Copyright: (c) Magnus Therning, 2012
+-- License: BSD3, found in the LICENSE file
+-- Copied from the Sandi library
+
 import Data.List
 import Foreign
 import Foreign.C.Types
