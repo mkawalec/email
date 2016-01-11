@@ -1,4 +1,4 @@
-module EmailParser.BodyParser where
+module EmailParser.Decoders.BodyParser where
 
 import qualified Data.ByteString.Char8 as BS
 
@@ -22,7 +22,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 import Types
 import EmailParser.Types
-import EmailParser.Decoders (qp_dec, decode_b64)
+import EmailParser.Decoders.FormatDecoders (qp_dec, decode_b64)
 
 
 -- |Remove transfer encoding from a string of bytes
@@ -34,8 +34,8 @@ transferDecode body encoding = case T.toLower encoding of
 
 -- |Transform a string of bytes with a given encoding
 -- into a UTF-8 string of bytes
-toText :: BS.ByteString -> Text -> Text
-toText body encoding = case T.toLower encoding of
+encodingToUtf :: BS.ByteString -> Text -> Text
+encodingToUtf body encoding = case T.toLower encoding of
   "utf-8" -> decodeUtf8 body
   _ -> ICU.toUnicode converter body
     where converter = unsafePerformIO $ ICU.open (T.unpack encoding) (Just True)
@@ -55,11 +55,11 @@ decodeBody headers body =
 -- the contents into an UTF-8 encoded Text.
 --
 -- It will recover from errors, wherever possible
-parseTextBody :: [Header] -> BS.ByteString -> Either ErrorMessage Text
-parseTextBody headers body =
+decodeTextBody :: [Header] -> BS.ByteString -> Text
+decodeTextBody headers body =
   if isRight charset
-    then charset >>= return . toText decodedBody
-    else Right $ decodeUtf8 decodedBody
+    then encodingToUtf decodedBody (head . rights [charset])
+    else decodeUtf8 decodedBody
   where decodedBody = decodeBody headers body
         charset = findHeader "Content-Type" headers >>=
           \h -> maybeToEither "" (parseMIMEType $ headerContents h) >>=
