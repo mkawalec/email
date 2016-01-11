@@ -1,13 +1,18 @@
 module EmailParser.Utils where
 
+import EmailParser.Types
+import Types
+
 import Data.Attoparsec.ByteString
 import qualified Data.Attoparsec.ByteString as AP
 import qualified Data.ByteString.Char8 as BS
 import Debug.Trace as DT
 import Data.Word8
+import Data.List
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Either.Utils (maybeToEither)
 
 -- |If the previous character was a carriage return and the current
 -- is a line feed, stop parsing
@@ -39,3 +44,11 @@ commentRemover contents = T.strip withoutComment
         withoutComment = if length splitAtComment > 1
                           then T.append (head splitAtComment) (last splitAtComment)
                           else head splitAtComment
+
+-- |Given a header name, it will try to locate it in
+-- a list of headers, fail if it's not there
+findHeader :: Text -> [Header] -> Either ErrorMessage Header
+findHeader hdr headers = maybeToEither notFound header
+  where notFound    = "Cound not find header '" ++ (show hdr) ++ "'"
+        eigenHeader = T.toLower hdr
+        header      = find (\x -> (T.toLower $ headerName x) == eigenHeader) headers

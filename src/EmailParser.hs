@@ -1,9 +1,13 @@
-module EmailParser (parseMessage, headerParser, messageParser) where
+module EmailParser (parseMessage) where
 
-import EmailParsers.Parsers.Message (messageParser)
+import Types
+import EmailParser.Types
+import EmailParser.Parsers.Message (messageParser)
+
 import qualified Data.ByteString.Char8 as BSC
 import Data.Attoparsec.ByteString
 
+-- |Parses a single message of any mimetype
 parseMessage :: BSC.ByteString -> IO (Either ErrorMessage EmailMessage)
-parseMessage message = do
+parseMessage message =
   return $ parseOnly messageParser message >>= id

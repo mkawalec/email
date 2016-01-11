@@ -1,8 +1,7 @@
-module EmailParser.Decoders.BodyParser where
+module EmailParser.Decoders.BodyDecoder where
 
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Char8 as BSC
 
-import qualified Codec.Binary.Base64 as B64
 import Codec.MIME.Parse (parseMIMEType)
 import Codec.MIME.Type
 
@@ -23,10 +22,11 @@ import System.IO.Unsafe (unsafePerformIO)
 import Types
 import EmailParser.Types
 import EmailParser.Decoders.FormatDecoders (qp_dec, decode_b64)
+import EmailParser.Utils (findHeader)
 
 
 -- |Remove transfer encoding from a string of bytes
-transferDecode :: BS.ByteString -> Text -> Either (BS.ByteString, BS.ByteString) BS.ByteString
+transferDecode :: BSC.ByteString -> Text -> Either (BSC.ByteString, BSC.ByteString) BSC.ByteString
 transferDecode body encoding = case T.toLower encoding of
   "quoted-printable" -> qp_dec body
   "base64" -> decode_b64 body
@@ -34,14 +34,14 @@ transferDecode body encoding = case T.toLower encoding of
 
 -- |Transform a string of bytes with a given encoding
 -- into a UTF-8 string of bytes
-encodingToUtf :: BS.ByteString -> Text -> Text
+encodingToUtf :: BSC.ByteString -> Text -> Text
 encodingToUtf body encoding = case T.toLower encoding of
   "utf-8" -> decodeUtf8 body
   _ -> ICU.toUnicode converter body
     where converter = unsafePerformIO $ ICU.open (T.unpack encoding) (Just True)
 
 -- |Reverse content transfer encoding applied to the body.
-decodeBody :: [Header] -> BS.ByteString -> BS.ByteString
+decodeBody :: [Header] -> BSC.ByteString -> BSC.ByteString
 decodeBody headers body =
   if isRight decodedBody
     then head . rights $ [decodedBody]
@@ -55,21 +55,13 @@ decodeBody headers body =
 -- the contents into an UTF-8 encoded Text.
 --
 -- It will recover from errors, wherever possible
-decodeTextBody :: [Header] -> BS.ByteString -> Text
+decodeTextBody :: [Header] -> BSC.ByteString -> Text
 decodeTextBody headers body =
   if isRight charset
-    then encodingToUtf decodedBody (head . rights [charset])
+    then encodingToUtf decodedBody (head . rights $ [charset])
     else decodeUtf8 decodedBody
   where decodedBody = decodeBody headers body
         charset = findHeader "Content-Type" headers >>=
           \h -> maybeToEither "" (parseMIMEType $ headerContents h) >>=
           \m -> maybeToEither "" $ find (\x -> (paramName x) == "charset") (mimeParams m) >>=
           return . paramValue
-
--- |Given a header name, it will try to locate it in
--- a list of headers, fail if it's not there
-findHeader :: Text -> [Header] -> Either ErrorMessage Header
-findHeader hdr headers = maybeToEither notFound header
-  where notFound    = "Cound not find header '" ++ (show hdr) ++ "'"
-        eigenHeader = T.toLower hdr
-        header      = find (\x -> (T.toLower $ headerName x) == eigenHeader) headers
