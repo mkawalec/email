@@ -1,0 +1,5 @@
+- [ ] Fetch a list of all mailboxes
+- [ ] Download all messages in a mailbox
+- [ ] Update changed flags on messages (deletes as well)
+- [ ] Fetch new messages
+- [ ] Do these ops in parallel
