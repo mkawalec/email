@@ -1,0 +1,4 @@
+accounts:
+  - name: "account name"
+    login: "your login"
+    password: "your password"
