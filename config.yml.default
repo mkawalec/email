@@ -2,3 +2,5 @@ accounts:
   - name: "account name"
     login: "your login"
     password: "your password"
+    server: "imap.gmail.com"
+    port: 993

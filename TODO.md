@@ -1,6 +1,8 @@
 - [x] Fetch a list of all mailboxes
 - [x] Get config from config.yaml
 - [ ] Download all messages in a mailbox
+- [ ] Stream the messages
+- [ ] Save the messages in a DB
 - [ ] Update changed flags on messages (deletes as well)
 - [ ] Fetch new messages
 - [ ] Do these ops in parallel
