@@ -10,6 +10,10 @@ import Control.Monad (liftM)
 import Data.Either (isRight)
 import Network.IMAP
 
+import Pipes ((>->))
+import qualified Pipes.Prelude as P
+import Pipes.Core (runEffect)
+
 main :: IO ()
 main = do
   firstAccount <- (liftM . liftM) (head . accounts) readConfig
@@ -21,6 +25,8 @@ main = do
 
       ids <- getMessageIds conn
       if isRight ids
-        then getMessages conn (fromRight ids) >>= print
+        then do
+          runEffect $ (getMessages conn (fromRight ids)) >-> parseMsg >-> P.mapM_ print
+          return ()
         else return ()
     else return ()
