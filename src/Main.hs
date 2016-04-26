@@ -5,6 +5,7 @@ import Discover
 import Types
 import Config
 import Fetch
+import Database
 import Data.Either.Unwrap (fromRight)
 import Control.Monad (liftM)
 import Data.Either (isRight)
@@ -14,10 +15,13 @@ import qualified Debug.Trace as DT
 import Pipes ((>->))
 import qualified Pipes.Prelude as P
 import Pipes.Core (runEffect)
+import Database.PostgreSQL.Simple (connectPostgreSQL)
 
 main :: IO ()
 main = do
   firstAccount <- (liftM . liftM) (head . accounts) readConfig
+  dbConn <- connectPostgreSQL "postgresql://email:email@127.0.0.1:2345/email"
+
   if isRight firstAccount
     then do
       conn <- getConnection (fromRight firstAccount)
@@ -29,7 +33,7 @@ main = do
         then do
           runEffect $ (getMessages conn (fromRight ids))
                       >-> parseMsg
-                      >-> P.drain
+                      >-> saveMessages dbConn
           return ()
         else return ()
     else return ()

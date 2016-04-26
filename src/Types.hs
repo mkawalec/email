@@ -57,7 +57,7 @@ instance Aeson.ToJSON MP.EmailMessage
 instance Aeson.ToJSON MP.Header
 instance Aeson.ToJSON MP.EmailAddress
 instance Aeson.ToJSON MP.EmailBody where
-  toJSON body@(MP.MessageBody m) = Aeson.toJSON body
+  toJSON (MP.MessageBody m) = Aeson.toJSON m
   toJSON (MP.TextBody text) = Aeson.String text
   toJSON (MP.Attachment hdrs name _ filename) = Aeson.object [
     "headers" .= Aeson.toJSON hdrs,

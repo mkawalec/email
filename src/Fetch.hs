@@ -40,7 +40,7 @@ parseMessage :: P.Pipe I.UntaggedResult ((Either MPT.ErrorMessage MPT.EmailMessa
 parseMessage = do
   (I.Fetch msg) <- P.await
   let (bodies, metadata) = L.partition (I.isBody) msg
-  DT.traceShow (length bodies) $ mapM_ (\(I.Body b) -> P.yield $ (MP.parseMessage b, metadata)) bodies
+  DT.traceShow (length bodies) $ mapM_ (\(I.Body b) -> P.yield $! (MP.parseMessage b, metadata)) bodies
   parseMessage
 
 instance I.Universe (LT.ListT (P.Producer I.CommandResult IO)) where
