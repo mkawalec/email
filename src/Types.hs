@@ -4,8 +4,11 @@ import Data.Text
 import GHC.Generics
 import Data.Yaml
 import Control.Applicative
+import qualified Network.IMAP.Types as IMAP
 
 type Error = Text
+type UID = Int
+type Metadata = [IMAP.UntaggedResult]
 
 data AccountConfig = AccountConfig {
   accountName :: Text,

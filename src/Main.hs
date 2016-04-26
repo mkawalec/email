@@ -9,6 +9,7 @@ import Data.Either.Unwrap (fromRight)
 import Control.Monad (liftM)
 import Data.Either (isRight)
 import Network.IMAP
+import qualified Debug.Trace as DT
 
 import Pipes ((>->))
 import qualified Pipes.Prelude as P
@@ -26,7 +27,9 @@ main = do
       ids <- getMessageIds conn
       if isRight ids
         then do
-          runEffect $ (getMessages conn (fromRight ids)) >-> parseMsg >-> P.mapM_ print
+          runEffect $ (getMessages conn (fromRight ids))
+                      >-> parseMsg
+                      >-> P.drain
           return ()
         else return ()
     else return ()
