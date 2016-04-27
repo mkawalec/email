@@ -2,8 +2,10 @@
 - [x] Get config from config.yaml
 - [x] Download all messages in a mailbox
 - [x] Save the messages in a DB
-- [ ] Create a message fetching API
+- [x] Create a message fetching API
 - [ ] Create a simple interface for showing the messages
+- [ ] Fix the text decoding bug in messages
+- [ ] Release a new version of email/imap that work :D
 - [ ] Update changed flags on messages (deletes as well)
 - [ ] Fetch new messages
 - [ ] Do these ops in parallel and for many mailboxes
