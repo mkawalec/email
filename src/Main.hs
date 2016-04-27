@@ -16,13 +16,17 @@ import Pipes ((>->))
 import qualified Pipes.Prelude as P
 import Pipes.Core (runEffect)
 import Database.PostgreSQL.Simple (connectPostgreSQL)
+import API
+import Network.Wai.Handler.Warp (run)
 
 main :: IO ()
 main = do
   firstAccount <- (liftM . liftM) (head . accounts) readConfig
   dbConn <- connectPostgreSQL "postgresql://email:email@127.0.0.1:2345/email"
 
-  if isRight firstAccount
+  run 8085 $ api dbConn
+
+  {-if isRight firstAccount
     then do
       conn <- getConnection (fromRight firstAccount)
       getAllMailboxes conn >>= print
@@ -36,4 +40,4 @@ main = do
                       >-> saveMessages dbConn
           return ()
         else return ()
-    else return ()
+    else return ()-}

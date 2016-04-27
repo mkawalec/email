@@ -1,7 +1,7 @@
 - [x] Fetch a list of all mailboxes
 - [x] Get config from config.yaml
 - [x] Download all messages in a mailbox
-- [ ] Save the messages in a DB
+- [x] Save the messages in a DB
 - [ ] Create a message fetching API
 - [ ] Create a simple interface for showing the messages
 - [ ] Update changed flags on messages (deletes as well)
