@@ -23,3 +23,5 @@ attachments/
 .*.sw*
 station-dump
 config.yml
+
+frontend/dist
