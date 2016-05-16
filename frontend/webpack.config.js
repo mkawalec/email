@@ -29,9 +29,10 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.purs$/, loader: 'purs-loader?output=output&src[]=bower_components/purescript-*/src/**/*.purs&src=[]=src/**/*.purs&ffi[]=bower_components/purescript-*/src/**/*.js'},
-      { test: /\.js$/, loader: 'source-map-loader', exclude: /node_modules|bower_components/},
-      { test: /\.png$/, loader: 'url-loader' }
+      { test: /\.purs$/, loader: 'purs?output=output&src[]=bower_components/purescript-*/src/**/*.purs&src=[]=src/**/*.purs&ffi[]=bower_components/purescript-*/src/**/*.js'},
+      { test: /\.js$/, loader: 'source-map', exclude: /node_modules|bower_components/},
+      { test: /\.png$/, loader: 'url' },
+      { test: /\.styl$/, loader: 'style!css!stylus' }
     ]
   },
   plugins: [purescriptPlugin, new LiveReloadPlugin(), new HtmlWebpackPlugin(htmlPluginOpts)],
