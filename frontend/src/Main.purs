@@ -25,7 +25,7 @@ ui = component { render, eval }
   render (State state) =
     H.div_
       [ H.h1_
-          [ H.text "Hello world!" ]
+          [ H.text "Hello worl2133!" ]
       , H.p_
           [ H.text "Why not toggle this button:" ]
       , H.button
