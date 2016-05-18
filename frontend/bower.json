@@ -13,6 +13,12 @@
     "purescript-halogen": "^0.6.1",
     "purescript-generics": "^0.7.2",
     "purescript-coproducts": "^0.4.1",
-    "purescript-control": "^0.3.2"
+    "purescript-control": "^0.3.2",
+    "purescript-affjax": "^0.13.2",
+    "purescript-aff": "^0.16.1",
+    "purescript-argonaut-core": "^0.2.3",
+    "purescript-maybe": "^0.3.5",
+    "purescript-exceptions": "^0.3.4",
+    "purescript-dom": "^0.2.22"
   }
 }
