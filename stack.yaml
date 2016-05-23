@@ -1,0 +1,16 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- '.'
+- ../emailparse
+- ../imap
+extra-deps:
+- async-2.0.2
+- data-default-0.6.0
+- ipprint-0.6
+- mime-0.4.0.2
+- monadIO-0.10.1.4
+- rolling-queue-0.1
+- sr-extra-1.46.3.1
+- strptime-1.0.10
+resolver: nightly-2016-05-19
