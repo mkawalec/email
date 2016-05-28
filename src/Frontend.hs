@@ -1,4 +1,8 @@
 module Main where
 
+
+import React.Flux
+import Frontend.MessageSidebar
+
 main :: IO ()
-main = putStrLn "helloworld"
+main = reactRender "messages" messageSidebar ()

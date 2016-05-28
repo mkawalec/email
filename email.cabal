@@ -74,9 +74,12 @@ executable frontend
                        MultiParamTypeClasses,
                        ScopedTypeVariables,
                        TypeOperators,
-                       TypeFamilies
+                       TypeFamilies,
+                       DeriveAnyClass,
+                       BangPatterns
 
   if impl(ghcjs)
     build-depends:      base >= 4.8 && <4.9
-
-
+                      , react-flux == 1.0.*
+                      , text == 1.2.*
+                      , deepseq == 1.4.*
