@@ -10,7 +10,7 @@ CREATE TABLE message (
   id uuid primary key default uuid_generate_v4(),
   uid bigint not null,
   from_addr uuid references email_address(id),
-  sent_date timestamp,
+  sent_date timestamp with time zone,
   reply_to uuid references email_address(id),
   message_id text,
   in_reply_to text,

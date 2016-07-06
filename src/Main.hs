@@ -7,7 +7,7 @@ import Config
 import Fetch
 import Database
 import Data.Either.Unwrap (fromRight)
-import Control.Monad (liftM)
+import Control.Monad (liftM, void)
 import Data.Either (isRight)
 import Network.IMAP
 import qualified Debug.Trace as DT
@@ -18,13 +18,15 @@ import Pipes.Core (runEffect)
 import Database.PostgreSQL.Simple (connectPostgreSQL)
 import API
 import Network.Wai.Handler.Warp (run)
+import Control.Concurrent.Thread (forkIO)
 
 main :: IO ()
 main = do
   firstAccount <- (liftM . liftM) (head . accounts) readConfig
   dbConn <- connectPostgreSQL "postgresql://email:email@127.0.0.1:2345/email"
 
-  --run 8085 $ api dbConn
+  -- The API thread
+  (_, apiWait) <- forkIO $ run 8085 $ api dbConn
 
   if isRight firstAccount
     then do
@@ -41,3 +43,4 @@ main = do
           return ()
         else return ()
     else return ()
+  void apiWait

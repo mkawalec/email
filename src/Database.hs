@@ -4,7 +4,6 @@ import Types
 import Data.Aeson (toJSON)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
-import Database.PostgreSQL.Simple.ToField
 import Data.Either (isRight)
 import Data.Either.Utils (fromRight)
 import Data.List (find)
@@ -12,7 +11,6 @@ import Network.IMAP.Types (isUID)
 import qualified Network.IMAP.Types as IMAP
 import Data.Maybe (isJust, fromJust)
 import qualified Data.Text as T
-import Data.Text.Encoding (encodeUtf8)
 import qualified Network.Mail.Parse.Types as MPT
 
 import qualified Pipes.Prelude as P
@@ -85,14 +83,6 @@ persistMessage conn idsMap msg messageUid = query conn [sql|
     RETURNING id
     |] serializedMsg
   where serializedMsg = serializeMessage idsMap msg messageUid
-
-data RelationType = TO | CC | BCC
-  deriving (Eq, Show)
-
-instance ToField RelationType where
-  toField TO = Escape . encodeUtf8 $ "To"
-  toField CC = Escape . encodeUtf8 $ "CC"
-  toField BCC = Escape . encodeUtf8 $ "BCC"
 
 persistRelatedEmails :: Connection -> UUID -> EmailIdMap -> MPT.EmailMessage -> IO ()
 persistRelatedEmails conn msgId idMap emailMessage = void $
