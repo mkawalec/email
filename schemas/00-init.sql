@@ -18,8 +18,10 @@ CREATE TABLE message (
   message text
 );
 
-CREATE TABLE message_references (
+CREATE TYPE email_relation AS ENUM ('To', 'CC', 'BCC');
+CREATE TABLE message_emails (
   id uuid primary key default uuid_generate_v4(),
-  messsage_id uuid references message(id),
-  references_id text
+  message_id uuid references message(id),
+  email_id uuid references email_address(id),
+  relation_type email_relation not null
 );

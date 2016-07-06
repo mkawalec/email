@@ -4,6 +4,7 @@ import Types
 import Data.Aeson (toJSON)
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
+import Database.PostgreSQL.Simple.ToField
 import Data.Either (isRight)
 import Data.Either.Utils (fromRight)
 import Data.List (find)
@@ -11,6 +12,7 @@ import Network.IMAP.Types (isUID)
 import qualified Network.IMAP.Types as IMAP
 import Data.Maybe (isJust, fromJust)
 import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8)
 import qualified Network.Mail.Parse.Types as MPT
 
 import qualified Pipes.Prelude as P
@@ -21,7 +23,8 @@ import Data.Time.LocalTime (ZonedTime)
 
 import qualified Data.Map.Strict as M
 import qualified Data.Aeson.Types as AT
-import Control.Monad (void)
+import Control.Monad (void, when)
+import Safe
 
 type EmailIdMap = M.Map T.Text UUID
 
@@ -36,14 +39,49 @@ saveMessage conn (msg, metadata) = do
       let (IMAP.UID unpackedUid) = fromJust uid
       let serializedMsg = serializeMessage idsMap (fromRight msg) unpackedUid
 
-      msgId :: [(Only UUID)] <- query conn [sql|
+      msgIds :: [(Only UUID)] <- query conn [sql|
         INSERT INTO message
         (uid, from_addr, sent_date, reply_to, message_id, in_reply_to, subject, message)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING id
         |] serializedMsg
-      return ()
+
+      let msgId = headMay msgIds
+      when (isJust msgId) $ do
+          let unpackedId = (\(Only uuid) -> uuid) $ fromJust msgId
+          saveRelatedEmails conn unpackedId idsMap $ fromRight msg
     else return ()
+
+data RelationType = TO | CC | BCC
+  deriving (Eq, Show)
+
+instance ToField RelationType where
+  toField TO = Escape . encodeUtf8 $ "To"
+  toField CC = Escape . encodeUtf8 $ "CC"
+  toField BCC = Escape . encodeUtf8 $ "BCC"
+
+saveRelatedEmails :: Connection -> UUID -> EmailIdMap -> MPT.EmailMessage -> IO ()
+saveRelatedEmails conn msgId idMap emailMessage = void $
+  executeMany conn [sql|
+    INSERT INTO message_emails
+    (message_id, email_id, relation_type)
+    VALUES (?, ?, ?)
+  |] serializedAddrs
+    where headers = MPT.emailHeaders emailMessage
+          serializedAddrs = concatMap (extractAddrs msgId idMap) headers
+
+extractAddrs :: UUID ->
+                EmailIdMap ->
+                MPT.Header ->
+                [(UUID, UUID, RelationType)] -- messageId, emailId, relationType
+extractAddrs msgId idMap header = case header of
+    MPT.To addrs -> map (serializeAddr TO) addrs
+    MPT.CC addrs -> map (serializeAddr CC) addrs
+    MPT.BCC addrs -> map (serializeAddr BCC) addrs
+    _ -> []
+  where addrToId (MPT.EmailAddress addr _) = idMap M.! addr
+        serializeAddr addrType addr = (msgId, addrToId addr, addrType)
+
 
 serializeMessage :: EmailIdMap ->
                     MPT.EmailMessage ->
