@@ -7,16 +7,16 @@ Let's do it! Here's what we have to do:
 - [x] Create a message fetching API
 - [ ] Save more info from the messages to the DB (standard headers, if
       there's an attachment and such)
-- [ ] Save the contact info from the message to the DB
+- [x] Save the contact info from the message to the DB
 - [ ] Serve only the parsed headers of messages on the main API, all of
       the contents when a message is requested, an additional endpoint for
       getting a given attachment
-- [ ] Integrate with GPG for automatic message decryption
 - [ ] Catch errors and recover from them where needed
 - [ ] Support updates of mailboxes
 - [ ] Support automatic update of all the mailboxes for an account
-- [ ] Support multiple accounts
 - [ ] Support pipelined, streamlined updates
+- [ ] Support multiple accounts
+- [ ] Integrate with GPG for automatic message decryption
 - [ ] Add tests
 - [ ] Check if postgres search is sufficient, if not, play with elastic
 - [ ] Make an email-reading interface
