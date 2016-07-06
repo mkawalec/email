@@ -28,11 +28,14 @@ import Safe
 
 type EmailIdMap = M.Map T.Text UUID
 
+-- |Sequentially saves a set of messages or
+-- does nothing if there was a parse error
 saveMessages :: Connection ->
                 P.Consumer ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) IO ()
 saveMessages conn = P.mapM_ $ saveMessage conn
 
 
+-- |Saves a message and all of it's related metadata in a single transaction
 saveMessage :: Connection ->
                ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) ->
                IO ()
@@ -53,6 +56,7 @@ saveMessage conn (msg, metadata) = do
             persistReferences conn unpackedId (fromRight msg)
     else return ()
 
+-- |Saves message references to the db
 persistReferences :: Connection -> UUID -> MPT.EmailMessage -> IO ()
 persistReferences conn msgId msg = void $ executeMany conn [sql|
     INSERT INTO message_references
@@ -113,6 +117,7 @@ extractAddrs msgId idMap header = case header of
         serializeAddr addrType addr = (msgId, addrToId addr, addrType)
 
 
+-- |Serializes the bulk of the message, along with message contents
 serializeMessage :: EmailIdMap ->
                     MPT.EmailMessage ->
                     Int ->
@@ -174,7 +179,7 @@ extractHeader header = case header of
   _ -> []
 
 
--- ALL HAIL THE GLORIOUS BOILERPLATE!
+-- ALL HAIL THE GLORIOUS BOILERPLATE! GLORY TO THE BOILERPLATE GODS!
 isFrom (MPT.From _) = True
 isFrom _ = False
 
