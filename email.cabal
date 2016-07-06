@@ -31,7 +31,8 @@ executable email
                        ScopedTypeVariables,
                        TypeOperators,
                        TypeFamilies,
-                       QuasiQuotes
+                       QuasiQuotes,
+                       LambdaCase
   other-modules:       Discover
   -- other-modules:
   -- other-extensions:

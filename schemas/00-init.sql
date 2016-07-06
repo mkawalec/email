@@ -21,7 +21,13 @@ CREATE TABLE message (
 CREATE TYPE email_relation AS ENUM ('To', 'CC', 'BCC');
 CREATE TABLE message_emails (
   id uuid primary key default uuid_generate_v4(),
-  message_id uuid references message(id),
-  email_id uuid references email_address(id),
+  message_id uuid references message(id) ON DELETE CASCADE,
+  email_id uuid references email_address(id) ON DELETE CASCADE,
   relation_type email_relation not null
+);
+
+CREATE TABLE message_references (
+  id uuid primary key default uuid_generate_v4(),
+  message_id uuid references message(id) ON DELETE CASCADE,
+  references_id text not null
 );

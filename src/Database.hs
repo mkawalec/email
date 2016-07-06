@@ -28,29 +28,59 @@ import Safe
 
 type EmailIdMap = M.Map T.Text UUID
 
+saveMessages :: Connection ->
+                P.Consumer ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) IO ()
+saveMessages conn = P.mapM_ $ saveMessage conn
+
+
 saveMessage :: Connection ->
                ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) ->
                IO ()
 saveMessage conn (msg, metadata) = do
   let uid = find (isUID) metadata
   if isRight msg && isJust uid
-    then DT.traceShow (MPT.emailHeaders $ fromRight msg) $ do
+    then do
       idsMap <- saveMetadata conn $ fromRight msg
       let (IMAP.UID unpackedUid) = fromJust uid
-      let serializedMsg = serializeMessage idsMap (fromRight msg) unpackedUid
+      withTransaction conn $ do
+        msgIds <- persistMessage conn idsMap (fromRight msg) unpackedUid
 
-      msgIds :: [(Only UUID)] <- query conn [sql|
-        INSERT INTO message
-        (uid, from_addr, sent_date, reply_to, message_id, in_reply_to, subject, message)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        RETURNING id
-        |] serializedMsg
+        let msgId = headMay msgIds
+        when (isJust msgId) $ do
+            let unpackedId = (\(Only uuid) -> uuid) $ fromJust msgId
 
-      let msgId = headMay msgIds
-      when (isJust msgId) $ do
-          let unpackedId = (\(Only uuid) -> uuid) $ fromJust msgId
-          saveRelatedEmails conn unpackedId idsMap $ fromRight msg
+            persistRelatedEmails conn unpackedId idsMap $ fromRight msg
+            persistReferences conn unpackedId (fromRight msg)
     else return ()
+
+persistReferences :: Connection -> UUID -> MPT.EmailMessage -> IO ()
+persistReferences conn msgId msg = void $ executeMany conn [sql|
+    INSERT INTO message_references
+    (message_id, references_id)
+    VALUES (?, ?)
+    |] $ map (\ref -> (msgId, ref)) refs
+  where refs = concatMap extractReferences headers
+        headers = MPT.emailHeaders msg
+
+
+extractReferences :: MPT.Header -> [MPT.MessageId]
+extractReferences = \case
+  MPT.References refs -> refs
+  _ -> []
+
+
+persistMessage :: Connection ->
+                  EmailIdMap ->
+                  MPT.EmailMessage ->
+                  Int ->
+                  IO [(Only UUID)]
+persistMessage conn idsMap msg messageUid = query conn [sql|
+    INSERT INTO message
+    (uid, from_addr, sent_date, reply_to, message_id, in_reply_to, subject, message)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    RETURNING id
+    |] serializedMsg
+  where serializedMsg = serializeMessage idsMap msg messageUid
 
 data RelationType = TO | CC | BCC
   deriving (Eq, Show)
@@ -60,8 +90,8 @@ instance ToField RelationType where
   toField CC = Escape . encodeUtf8 $ "CC"
   toField BCC = Escape . encodeUtf8 $ "BCC"
 
-saveRelatedEmails :: Connection -> UUID -> EmailIdMap -> MPT.EmailMessage -> IO ()
-saveRelatedEmails conn msgId idMap emailMessage = void $
+persistRelatedEmails :: Connection -> UUID -> EmailIdMap -> MPT.EmailMessage -> IO ()
+persistRelatedEmails conn msgId idMap emailMessage = void $
   executeMany conn [sql|
     INSERT INTO message_emails
     (message_id, email_id, relation_type)
@@ -143,10 +173,6 @@ extractHeader header = case header of
   MPT.BCC addrs -> addrs
   _ -> []
 
-
-saveMessages :: Connection ->
-                P.Consumer ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) IO ()
-saveMessages conn = P.mapM_ $ saveMessage conn
 
 -- ALL HAIL THE GLORIOUS BOILERPLATE!
 isFrom (MPT.From _) = True
