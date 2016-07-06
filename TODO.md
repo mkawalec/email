@@ -5,7 +5,7 @@ Let's do it! Here's what we have to do:
 - [x] Download all messages in a mailbox
 - [x] Save the messages in a DB
 - [x] Create a message fetching API
-- [ ] Save more info from the messages to the DB (standard headers, if
+- [x] Save more info from the messages to the DB (standard headers, if
       there's an attachment and such)
 - [x] Save the contact info from the message to the DB
 - [ ] Serve only the parsed headers of messages on the main API, all of
