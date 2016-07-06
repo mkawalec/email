@@ -22,11 +22,11 @@ import Network.Wai.Handler.Warp (run)
 main :: IO ()
 main = do
   firstAccount <- (liftM . liftM) (head . accounts) readConfig
-  dbConn <- connectPostgreSQL "postgresql://email:email@192.168.99.100:2345/email"
+  dbConn <- connectPostgreSQL "postgresql://email:email@127.0.0.1:2345/email"
 
-  run 8085 $ api dbConn
+  --run 8085 $ api dbConn
 
-  {-if isRight firstAccount
+  if isRight firstAccount
     then do
       conn <- getConnection (fromRight firstAccount)
       getAllMailboxes conn >>= print
@@ -40,4 +40,4 @@ main = do
                       >-> saveMessages dbConn
           return ()
         else return ()
-    else return ()-}
+    else return ()

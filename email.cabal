@@ -30,7 +30,9 @@ executable email
                        MultiParamTypeClasses,
                        ScopedTypeVariables,
                        TypeOperators,
-                       TypeFamilies
+                       TypeFamilies,
+                       QuasiQuotes,
+                       LambdaCase
   other-modules:       Discover
   -- other-modules:
   -- other-extensions:
@@ -53,7 +55,11 @@ executable email
                          servant == 0.7.*,
                          servant-server == 0.7.*,
                          wai == 3.2.*,
-                         warp == 3.2.*
+                         warp == 3.2.*,
+                         uuid-types == 1.0.*,
+                         time == 1.5.*,
+                         containers == 0.5.*,
+                         safe == 0.3.*
   hs-source-dirs:      src
   default-language:    Haskell2010
 
