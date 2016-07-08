@@ -11,7 +11,7 @@ Let's do it! Here's what we have to do:
 - [x] Serve only the parsed headers of messages on the main API
 - [x] references field is not parsed with stripped <
 - [x] Serve all of the contents when a message is requested
-- [ ] Save threads info somewhere
+- [ ] Save email threads info somewhere
 - [ ] Support updates of mailboxes
 - [ ] Parallel fetches (arbitrary parallel fetches)
 - [ ] Catch errors and recover from them where needed
