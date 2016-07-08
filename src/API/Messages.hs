@@ -14,16 +14,18 @@ import Control.Applicative
 import Data.Time.LocalTime (ZonedTime)
 import Data.UUID.Types (UUID)
 import qualified Data.UUID as UUID
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as M
+import Data.Tuple.HT (uncurry3)
 
 type MessagesAPI = "messages" :> Get '[JSON] [MessageDigest]
 
 type EmailRelationMap = M.Map UUID [EmailWithRelation]
 type EmailMap = M.Map UUID MPT.EmailAddress
+type ReferenceMap = M.Map UUID [T.Text]
 
 data MessageDigest = MessageDigest {
   msgId :: !UUID
@@ -32,6 +34,7 @@ data MessageDigest = MessageDigest {
 , sentDate :: Maybe ZonedTime
 , replyTo :: Maybe MPT.EmailAddress
 , messageId :: Maybe T.Text
+, references :: [T.Text]
 , inReplyTo :: Maybe T.Text
 , subject :: Maybe T.Text
 , to :: [MPT.EmailAddress]
@@ -56,10 +59,11 @@ server conn = liftIO $ do
     subject FROM message
   |]
   emailMaps <- fetchEmails conn (messageIds messages) (emailsInMessage messages)
-  return $! map (uncurry deserializeMessage emailMaps) messages
+  return $! map (uncurry3 deserializeMessage emailMaps) messages
 
 
-fetchEmails :: Connection -> [UUID] -> Set UUID -> IO (EmailRelationMap, EmailMap)
+fetchEmails :: Connection -> [UUID] -> Set UUID ->
+               IO (EmailRelationMap, EmailMap, ReferenceMap)
 fetchEmails conn msgIds emailIds = do
   -- Emails from to/cc/bcc fields
   emailsByMessageId <- relatedToMap <$> (query conn [sql|
@@ -76,21 +80,33 @@ fetchEmails conn msgIds emailIds = do
     WHERE id IN ?
   |] $ Only . In $ Set.toList emailIds)
 
-  return (emailsByMessageId, emailsByEmailId)
+  -- The references fields
+  referenceMap <- toReferenceMap <$> (query conn [sql|
+    SELECT message_id, references_id
+    FROM message_references
+    WHERE message_id IN ?
+  |] $ Only . In $ msgIds)
+
+  return (emailsByMessageId, emailsByEmailId, referenceMap)
+
+-- TODO: The references list - need to get all the references mentioning all
+-- emails, unmap to individual lists
 
 deserializeMessage :: EmailRelationMap ->
                       EmailMap ->
+                      ReferenceMap ->
                       (UUID, Int, Maybe UUID, Maybe ZonedTime,
                         Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text) ->
                       MessageDigest
-deserializeMessage emailsByMessageId emailsByEmailId (msgId, uid, fromUid, sentDate,
-  replyToUid, messageId, inReplyTo, subject) =
+deserializeMessage emailsByMessageId emailsByEmailId referenceMap (msgId, uid,
+  fromUid, sentDate, replyToUid, messageId, inReplyTo, subject) =
     MessageDigest msgId
                   uid
                   (fromUid >>= flip M.lookup emailsByEmailId)
                   sentDate
                   (replyToUid >>= flip M.lookup emailsByEmailId)
                   messageId
+                  (fromMaybe [] $ msgId `M.lookup` referenceMap)
                   inReplyTo
                   subject
                   (findEmails TO)
@@ -101,6 +117,9 @@ deserializeMessage emailsByMessageId emailsByEmailId (msgId, uid, fromUid, sentD
             unpack (EmailWithRelation _ email) = email
             findEmails relation = map unpack $ filter (byRelation relation) relatedEmails
 
+toReferenceMap :: [(UUID, T.Text)] -> ReferenceMap
+toReferenceMap msgReferences = M.fromListWith (++) asList
+  where asList = map (\(uuid, ref) -> (uuid, [ref])) msgReferences
 
 relatedToMap :: [(UUID, T.Text, Maybe T.Text, RelationType)] -> EmailRelationMap
 relatedToMap = M.fromListWith (++) . map toKeyVal
