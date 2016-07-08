@@ -15,7 +15,7 @@ CREATE TABLE message (
   message_id text,
   in_reply_to text,
   subject text,
-  message text
+  message json
 );
 
 CREATE TYPE email_relation AS ENUM ('To', 'CC', 'BCC');

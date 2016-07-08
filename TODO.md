@@ -10,7 +10,7 @@ Let's do it! Here's what we have to do:
 - [x] Save the contact info from the message to the DB
 - [x] Serve only the parsed headers of messages on the main API
 - [x] references field is not parsed with stripped <
-- [ ] Serve all of the contents when a message is requested
+- [x] Serve all of the contents when a message is requested
 - [ ] Save threads info somewhere
 - [ ] Support updates of mailboxes
 - [ ] Parallel fetches (arbitrary parallel fetches)
