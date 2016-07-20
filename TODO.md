@@ -15,15 +15,19 @@ Let's do it! Here's what we have to do:
 - [x] Serve threads on the API
 - [x] Take database conn info from an env file as well
 - [ ] Support updates of mailboxes
-- [ ] Parallel fetches (arbitrary parallel fetches)
 - [ ] Catch errors and recover from them where needed
 - [ ] Support update of all the mailboxes for an account (also of a selection)
 - [ ] Watch for message changes from the server (polling and watching)
 - [ ] Deal with attachments
   - [ ] Save the info on whether there are attachments (and which) to the DB
   - [ ] Serve the attachments on a separate endpoint
+- [ ] Parallel fetches (arbitrary parallel fetches)
 - [ ] Support multiple accounts
 - [ ] Integrate with GPG for automatic message decryption
-- [ ] Add tests
-- [ ] Check if postgres search is sufficient, if not, play with elastic
+- [ ] Add a search endpoint
+  - [ ] Choose a search engine (just postgres or maybe elastic?)
+  - [ ] Make sure that the search 'makes sense'
+- [ ] Add an email address hints endpoint
 - [ ] Make an email-reading interface
+- [ ] Post async updates to websockets as we update/fetch
+- [ ] Add tests
