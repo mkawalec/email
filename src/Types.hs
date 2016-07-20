@@ -11,6 +11,10 @@ import qualified Network.IMAP.Types as IMAP
 import qualified Network.Mail.Parse.Types as MP
 import qualified Data.HashMap.Strict as HM
 
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.FromField
+import Data.Text.Encoding (encodeUtf8)
+
 type Error = Text
 type UID = Int
 type Metadata = [IMAP.UntaggedResult]
@@ -37,6 +41,22 @@ instance YAML.FromJSON AccountConfig where
                          v .: "server" <*>
                          v .: "port"
   parseJSON _ = error "Wrong input format, needs an object"
+
+data RelationType = TO | CC | BCC
+  deriving (Eq, Show)
+
+instance ToField RelationType where
+  toField TO = Escape . encodeUtf8 $ "To"
+  toField CC = Escape . encodeUtf8 $ "CC"
+  toField BCC = Escape . encodeUtf8 $ "BCC"
+
+instance FromField RelationType where
+  fromField f bs
+    | bs == Nothing    = returnError UnexpectedNull f ""
+    | bs == Just "To"  = pure TO
+    | bs == Just "CC"  = pure CC
+    | bs == Just "BCC" = pure BCC
+    | otherwise        = returnError ConversionFailed f ""
 
 instance Aeson.FromJSON MP.EmailMessage
 instance Aeson.FromJSON MP.Header
