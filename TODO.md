@@ -13,7 +13,7 @@ Let's do it! Here's what we have to do:
 - [x] Serve all of the contents when a message is requested
 - [x] Save email threads info somewhere
 - [x] Serve threads on the API
-- [ ] Take database conn info from an env file as well
+- [x] Take database conn info from an env file as well
 - [ ] Support updates of mailboxes
 - [ ] Parallel fetches (arbitrary parallel fetches)
 - [ ] Catch errors and recover from them where needed

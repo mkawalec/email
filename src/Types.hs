@@ -28,7 +28,8 @@ data AccountConfig = AccountConfig {
 } deriving (Show, Eq, Ord, Generic)
 
 data Config = Config {
-  accounts :: [AccountConfig]
+  accounts :: [AccountConfig],
+  dbHost :: Text
 } deriving (Show, Eq, Ord, Generic)
 
 
