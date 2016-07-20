@@ -19,11 +19,21 @@ import Database.PostgreSQL.Simple (connectPostgreSQL)
 import API
 import Network.Wai.Handler.Warp (run)
 import Control.Concurrent.Thread (forkIO)
+import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8)
+import Control.Logging (errorL)
 
 main :: IO ()
 main = do
-  firstAccount <- (liftM . liftM) (head . accounts) readConfig
-  dbConn <- connectPostgreSQL "postgresql://email:email@192.168.99.100:2345/email"
+  config <- readConfig
+  let firstAccount = head . accounts <$> config
+      databaseHost = dbHost <$> config
+
+  connString <- if isRight databaseHost
+    then return $ T.concat ["postgresql://email:email@", fromRight databaseHost, ":2345/email"]
+    else error "Count not find database host info"
+
+  dbConn <- connectPostgreSQL $ encodeUtf8 connString
 
   -- The API thread
   (_, apiWait) <- forkIO $ run 8085 $ api dbConn
@@ -42,5 +52,5 @@ main = do
                       >-> saveMessages dbConn
           return ()
         else return ()
-    else return ()
+    else error "No account details count be found in the config.yml file"
   void apiWait
