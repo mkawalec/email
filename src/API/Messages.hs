@@ -15,6 +15,7 @@ import Control.Applicative
 import Data.Time.LocalTime (ZonedTime)
 import Data.UUID.Types (UUID)
 import qualified Data.UUID as UUID
+import qualified Debug.Trace as DT
 import Data.Maybe (catMaybes, fromJust, fromMaybe, isNothing, isJust)
 
 import Data.Set (Set)
@@ -42,7 +43,7 @@ data MessageDigest = MessageDigest {
 , to :: [MPT.EmailAddress]
 , cc :: [MPT.EmailAddress]
 , bcc :: [MPT.EmailAddress]
-, message :: JSON.Value
+, message :: Maybe JSON.Value
 } deriving (Eq, Show, Generic)
 
 instance ToJSON UUID where
@@ -70,7 +71,7 @@ getMessages conn uuid = do
   messages <- if isNothing uuid
     then query_ conn [sql|
           SELECT id, uid, from_addr, sent_date, reply_to, message_id,
-          in_reply_to, subject, cast('null' AS json) FROM message
+          in_reply_to, subject, NULL FROM message
         |]
     else query conn [sql|
           SELECT id, uid, from_addr, sent_date, reply_to, message_id,
@@ -108,15 +109,12 @@ fetchEmails conn msgIds emailIds = do
 
   return (emailsByMessageId, emailsByEmailId, referenceMap)
 
--- TODO: The references list - need to get all the references mentioning all
--- emails, unmap to individual lists
-
 deserializeMessage :: EmailRelationMap ->
                       EmailMap ->
                       ReferenceMap ->
                       (UUID, Int, Maybe UUID, Maybe ZonedTime,
                         Maybe UUID, Maybe T.Text, Maybe T.Text,
-                        Maybe T.Text, JSON.Value) ->
+                        Maybe T.Text, Maybe JSON.Value) ->
                       MessageDigest
 deserializeMessage emailsByMessageId emailsByEmailId referenceMap (msgId, uid,
   fromUid, sentDate, replyToUid, messageId, inReplyTo, subject, messageBody) =
@@ -133,7 +131,7 @@ deserializeMessage emailsByMessageId emailsByEmailId referenceMap (msgId, uid,
                   (findEmails CC)
                   (findEmails BCC)
                   messageBody
-      where relatedEmails = emailsByMessageId M.! msgId
+      where relatedEmails = fromMaybe [] $ msgId `M.lookup` emailsByMessageId
             byRelation relation (EmailWithRelation rel _) = relation == rel
             unpack (EmailWithRelation _ email) = email
             findEmails relation = map unpack $ filter (byRelation relation) relatedEmails
@@ -152,10 +150,10 @@ emailsToMap = M.fromList . map (\(uuid, email, label) ->
   (uuid, MPT.EmailAddress email label))
 
 emailsInMessage :: [(UUID, Int, Maybe UUID, Maybe ZonedTime,
-  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, JSON.Value)] -> Set UUID
+  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe JSON.Value)] -> Set UUID
 emailsInMessage messages = Set.fromList $ catMaybes allEmails
     where allEmails = concatMap (\(_, _, e1, _, e2, _, _, _, _) -> [e1, e2]) messages
 
 messageIds :: [(UUID, Int, Maybe UUID, Maybe ZonedTime,
-  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, JSON.Value)] -> [UUID]
+  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe JSON.Value)] -> [UUID]
 messageIds messages = map (\(msgId, _, _, _, _, _, _, _, _) -> msgId) messages
