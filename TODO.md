@@ -12,7 +12,7 @@ Let's do it! Here's what we have to do:
 - [x] references field is not parsed with stripped <
 - [x] Serve all of the contents when a message is requested
 - [x] Save email threads info somewhere
-- [ ] Serve threads on the API
+- [x] Serve threads on the API
 - [ ] Take database conn info from an env file as well
 - [ ] Support updates of mailboxes
 - [ ] Parallel fetches (arbitrary parallel fetches)
