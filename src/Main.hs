@@ -5,7 +5,7 @@ import Discover
 import Types
 import Config
 import Fetch
-import Database
+import Persist
 import Data.Either.Unwrap (fromRight)
 import Control.Monad (liftM, void)
 import Data.Either (isRight)

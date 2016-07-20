@@ -40,6 +40,7 @@ data MessageDigest = MessageDigest {
 , references :: [T.Text]
 , inReplyTo :: Maybe T.Text
 , subject :: Maybe T.Text
+, thread :: Maybe UUID
 , to :: [MPT.EmailAddress]
 , cc :: [MPT.EmailAddress]
 , bcc :: [MPT.EmailAddress]
@@ -71,11 +72,11 @@ getMessages conn uuid = do
   messages <- if isNothing uuid
     then query_ conn [sql|
           SELECT id, uid, from_addr, sent_date, reply_to, message_id,
-          in_reply_to, subject, NULL FROM message
+          in_reply_to, subject, thread, NULL FROM message
         |]
     else query conn [sql|
           SELECT id, uid, from_addr, sent_date, reply_to, message_id,
-          in_reply_to, subject, message FROM message
+          in_reply_to, subject, thread, message FROM message
           WHERE id = ?
         |] (Only $ fromJust uuid)
   emailMaps <- fetchEmails conn (messageIds messages) (emailsInMessage messages)
@@ -114,10 +115,10 @@ deserializeMessage :: EmailRelationMap ->
                       ReferenceMap ->
                       (UUID, Int, Maybe UUID, Maybe ZonedTime,
                         Maybe UUID, Maybe T.Text, Maybe T.Text,
-                        Maybe T.Text, Maybe JSON.Value) ->
+                        Maybe T.Text, Maybe UUID, Maybe JSON.Value) ->
                       MessageDigest
 deserializeMessage emailsByMessageId emailsByEmailId referenceMap (msgId, uid,
-  fromUid, sentDate, replyToUid, messageId, inReplyTo, subject, messageBody) =
+  fromUid, sentDate, replyToUid, messageId, inReplyTo, subject, threadId, messageBody) =
     MessageDigest msgId
                   uid
                   (fromUid >>= flip M.lookup emailsByEmailId)
@@ -127,6 +128,7 @@ deserializeMessage emailsByMessageId emailsByEmailId referenceMap (msgId, uid,
                   (fromMaybe [] $ msgId `M.lookup` referenceMap)
                   inReplyTo
                   subject
+                  threadId
                   (findEmails TO)
                   (findEmails CC)
                   (findEmails BCC)
@@ -150,10 +152,12 @@ emailsToMap = M.fromList . map (\(uuid, email, label) ->
   (uuid, MPT.EmailAddress email label))
 
 emailsInMessage :: [(UUID, Int, Maybe UUID, Maybe ZonedTime,
-  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe JSON.Value)] -> Set UUID
+  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text,
+  Maybe UUID, Maybe JSON.Value)] -> Set UUID
 emailsInMessage messages = Set.fromList $ catMaybes allEmails
-    where allEmails = concatMap (\(_, _, e1, _, e2, _, _, _, _) -> [e1, e2]) messages
+    where allEmails = concatMap (\(_, _, e1, _, e2, _, _, _, _, _) -> [e1, e2]) messages
 
 messageIds :: [(UUID, Int, Maybe UUID, Maybe ZonedTime,
-  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe JSON.Value)] -> [UUID]
-messageIds messages = map (\(msgId, _, _, _, _, _, _, _, _) -> msgId) messages
+  Maybe UUID, Maybe T.Text, Maybe T.Text, Maybe T.Text,
+  Maybe UUID, Maybe JSON.Value)] -> [UUID]
+messageIds messages = map (\(msgId, _, _, _, _, _, _, _, _, _) -> msgId) messages

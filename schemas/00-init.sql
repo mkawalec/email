@@ -6,6 +6,10 @@ CREATE TABLE email_address (
   address text not null unique
 );
 
+CREATE TABLE thread (
+  id uuid primary key default uuid_generate_v4()
+);
+
 CREATE TABLE message (
   id uuid primary key default uuid_generate_v4(),
   uid bigint not null,
@@ -15,6 +19,7 @@ CREATE TABLE message (
   message_id text,
   in_reply_to text,
   subject text,
+  thread uuid references thread(id),
   message json
 );
 

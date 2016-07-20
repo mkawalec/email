@@ -29,10 +29,10 @@ getMessages conn uids = LT.traverse_ (P.yield) fetchMessages
         fetchMessages = (uidFetch conn uidsToQuery :: LT.ListT (P.Producer I.CommandResult IO) I.CommandResult)
 
 parseMsg :: P.Pipe I.CommandResult ((Either MPT.ErrorMessage MPT.EmailMessage), Metadata) IO ()
-parseMsg = P.map (\a -> DT.trace "msg" a) >-> preserveNeeded >-> parseMessage
+parseMsg = preserveNeededHeaders >-> parseMessage
 
-preserveNeeded :: P.Pipe I.CommandResult I.UntaggedResult IO ()
-preserveNeeded = P.filter (\el-> I.isUntagged el)
+preserveNeededHeaders :: P.Pipe I.CommandResult I.UntaggedResult IO ()
+preserveNeededHeaders = P.filter (\el-> I.isUntagged el)
                >-> P.filter (\(I.Untagged res) -> I.isFetch res)
                >-> P.map (\(I.Untagged res) -> res)
 
@@ -40,7 +40,7 @@ parseMessage :: P.Pipe I.UntaggedResult ((Either MPT.ErrorMessage MPT.EmailMessa
 parseMessage = do
   (I.Fetch msg) <- P.await
   let (bodies, metadata) = L.partition (I.isBody) msg
-  DT.traceShow (length bodies) $ mapM_ (\(I.Body b) -> P.yield $! (MP.parseMessage b, metadata)) bodies
+  mapM_ (\(I.Body b) -> P.yield $! (MP.parseMessage b, metadata)) bodies
   parseMessage
 
 instance I.Universe (LT.ListT (P.Producer I.CommandResult IO)) where
