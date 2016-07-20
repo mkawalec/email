@@ -49,7 +49,9 @@ getThreadId conn uuid msgIds = do
     else createThread conn
 
 -- |Sets a `threadId` for messages with given uuids. Needed when some messages
---  in a thread have a different thread id then the rest
+--  in a thread have a different thread id than the rest.
+--  Such a situation would happen when two messages from the same thread
+--  that are not neighbours were added first and the joining messages were added later
 settleThreadIds :: Connection -> UUID -> [UUID] -> IO ()
 settleThreadIds conn threadId messageIds = void $ execute conn [sql|
   UPDATE message SET thread = ? WHERE id IN ?
