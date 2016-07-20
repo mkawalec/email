@@ -22,6 +22,7 @@ import Persist.Types
 import Persist.Utils
 import Persist.RelatedEmails (persistRelatedEmails)
 import Persist.References (persistReferences)
+import Persist.Thread (persistThread)
 import qualified Network.Mail.Parse.Types as MPT
 import Network.IMAP.Types (isUID)
 import qualified Network.IMAP.Types as IMAP
@@ -34,16 +35,18 @@ saveMessage conn (msg, metadata) = do
   let uid = find (isUID) metadata
   if isRight msg && isJust uid
     then do
-      idsMap <- saveMetadata conn $ fromRight msg
       let (IMAP.UID unpackedUid) = fromJust uid
-      msgIds <- persistMessage conn idsMap (fromRight msg) unpackedUid
+          unpackedMsg            = fromRight msg
+      idsMap <- saveMetadata conn unpackedMsg
+      msgIds <- persistMessage conn idsMap unpackedMsg unpackedUid
 
       let msgId = headMay msgIds
       when (isJust msgId) $ do
           let unpackedId = (\(Only uuid) -> uuid) $ fromJust msgId
 
-          persistRelatedEmails conn unpackedId idsMap $ fromRight msg
-          persistReferences conn unpackedId (fromRight msg)
+          persistRelatedEmails conn unpackedId idsMap unpackedMsg
+          persistReferences conn unpackedId unpackedMsg
+          persistThread conn unpackedId unpackedMsg
     else return ()
 
 persistMessage :: Connection ->

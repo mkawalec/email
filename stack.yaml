@@ -13,4 +13,5 @@ extra-deps:
 - rolling-queue-0.1
 - sr-extra-1.46.3.1
 - strptime-1.0.10
+- logging-3.0.4
 resolver: nightly-2016-05-19

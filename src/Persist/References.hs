@@ -17,7 +17,6 @@ persistReferences conn msgId msg = void $ executeMany conn [sql|
   where refs = concatMap extractReferences headers
         headers = MPT.emailHeaders msg
 
-
 extractReferences :: MPT.Header -> [MPT.MessageId]
 extractReferences = \case
   MPT.References refs -> refs
